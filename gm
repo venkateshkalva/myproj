@@ -78,3 +78,51 @@ namespace ConsoleApp1
         }
     }
 }
+
+
+
+
+
+
+foreach (JProperty property in contentJo.Properties())
+            {
+               // Console.WriteLine(property.Name + " - " + property.Value);
+                Console.WriteLine(property.Name + " - " + property.Value);
+                finalres = property.Name + " :";
+
+                if (property.Value.Type.ToString() == "String")
+                {
+                    finalres = finalres+" " + property.Value;
+                    list1.Add(finalres.TrimEnd());
+                    finalres = property.Name + " :";
+                }
+
+                    if (property.Value.Type.ToString() == "Array")
+                {
+                    JToken[] value = property.Value.ToArray();
+                 
+                    foreach (string y in value)
+                    {
+                        finalres = finalres+" "+ y + " ,";
+                    }
+                    list1.Add(finalres.TrimEnd(','));
+                    finalres = property.Name + " :";
+                }
+                if (property.Value.Type.ToString() == "Object")
+                {
+                    foreach (JProperty x in (JToken)property.Value)
+                    { // if 'obj' is a JObject
+                        string name = x.Name;
+                        JToken[] value = x.Value.ToArray();
+                        finalres = finalres + " " + name + " : ";
+                        foreach (string y in value)
+                        {
+                            finalres = finalres + y + " ,";
+                        }
+
+                        list1.Add(finalres.TrimEnd(','));
+                        finalres = property.Name + " :";
+                    }
+                }
+            }
+
