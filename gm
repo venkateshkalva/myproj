@@ -1,0 +1,80 @@
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
+using System.Dynamic;
+using System.IO;
+using System.Linq;
+using System.Text.Json;
+
+namespace ConsoleApp1
+{
+    class Program
+    {
+       
+        static void Main(string[] args)
+        {
+            string contentJson = @"{
+            ""etran_loan"": {
+              ""forgive_mortgae"": [
+               ""A valid numvber First "",
+                ""another number Second ""
+              ],
+                
+
+
+},
+
+""etran_loan23"": {
+              ""forgive_mortgae"": [
+               ""A valid numvber 5 "",
+                ""another number 6 ""
+              ],
+                ""SBA_number"": [
+               ""SBA valid numvber 7 "",
+                ""SBA another number 8""
+              ],
+
+
+}
+
+}";
+
+         
+            var contentJo = (JObject)JsonConvert.DeserializeObject(contentJson);
+            
+
+            string finalres = "";
+            List<string> list1 = new List<string>();
+            foreach (JProperty property in contentJo.Properties())
+            {
+               
+                Console.WriteLine(property.Name + " - " + property.Value);
+                finalres = property.Name + " :";
+
+                foreach (JProperty x in (JToken)property.Value)
+                { 
+                    string name = x.Name;
+                    JToken[] value = x.Value.ToArray();
+                    finalres = finalres + " " + name + " : ";
+                    foreach (string y in value)
+                    {
+                        finalres = finalres + y + " ,";
+                    }
+
+                    list1.Add(finalres.TrimEnd(','));
+                    finalres= property.Name + " :";
+                }
+            }
+           
+
+            foreach (string s in list1)
+            {
+                Console.WriteLine(s);
+            }
+
+           
+        }
+    }
+}
