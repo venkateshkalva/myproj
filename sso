@@ -1,0 +1,69 @@
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Identity.Web;
+using Microsoft.Graph;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc.Authorization;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// Add services to the container.
+builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
+    .AddMicrosoftIdentityWebApp(builder.Configuration.GetSection("AzureAd"))
+    .EnableTokenAcquisitionToCallDownstreamApi(new[] { "User.Read" })
+    .AddMicrosoftGraph(builder.Configuration.GetSection("Graph"))
+    .AddInMemoryTokenCaches();
+
+// Register GraphServiceClient as a singleton
+builder.Services.AddSingleton<GraphServiceClient>(serviceProvider =>
+{
+    var tokenAcquisition = serviceProvider.GetRequiredService<ITokenAcquisition>();
+    var authProvider = new DelegateAuthenticationProvider(async (requestMessage) =>
+    {
+        var token = await tokenAcquisition.GetAccessTokenForUserAsync(new[] { "User.Read" });
+        requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+    });
+
+    return new GraphServiceClient(authProvider);
+});
+
+builder.Services.AddControllersWithViews(options =>
+{
+    var policy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
+    options.Filters.Add(new AuthorizeFilter(policy));
+});
+
+builder.Services.AddRazorPages().AddMicrosoftIdentityUI();
+builder.Services.AddScoped<GraphService>();
+
+var app = builder.Build();
+
+// Configure the HTTP request pipeline.
+if (!app.Environment.IsDevelopment())
+{
+    app.UseExceptionHandler("/Home/Error");
+    app.UseHsts();
+}
+
+app.UseHttpsRedirection();
+app.UseStaticFiles();
+
+app.UseRouting();
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Home}/{action=Index}/{id?}");
+app.MapRazorPages();
+
+app.Run();
+
+
+dotnet add package Microsoft.Graph
+dotnet add package Microsoft.Identity.Web
+dotnet add package Microsoft.Identity.Web.MicrosoftGraph
